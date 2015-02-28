@@ -44,7 +44,7 @@ runTime.vireoRunSync = function () {
     	}
 
  };
-var totalNumber = 0;
+var totalNumber = 0; 
 var passedTest = 0;
 var newCreatedTest = 0; 
 	var message = fs.createReadStream('message.txt');
@@ -118,9 +118,9 @@ function compare(resultFolder, fileName, textCode)
  	})
 	lastResult.on('readable', function() {
   		var chunk;   
-  		  		//			Original.apply( process.stdout  ,[new Buffer("\nreadable:"+fileName+" ||||||||||||||||||\n")]) 
-  			//		Original.apply( process.stdout  ,[new Buffer("\nqueue length:"+runTime.waitList.length+" ||||||||||||||||||\n")]) 
-  				//	Original.apply( process.stdout  ,[new Buffer("\nruntime loaded :"+runTime.loadedVia+" ||||||||||||||||||\n")]) 
+  		 //			Original.apply( process.stdout  ,[new Buffer("\nreadable:"+fileName+" ||||||||||||||||||\n")]) 
+  		//		Original.apply( process.stdout  ,[new Buffer("\nqueue length:"+runTime.waitList.length+" ||||||||||||||||||\n")]) 
+  		//	Original.apply( process.stdout  ,[new Buffer("\nruntime loaded :"+runTime.loadedVia+" ||||||||||||||||||\n")]) 
 
 		var needLoaded = false;
   		if(!runTime.loadedVia )
@@ -140,7 +140,7 @@ function compare(resultFolder, fileName, textCode)
   			 if(runTime.loadedVia  === fileName )
   			 {
 
-  			 	// if the current code is loaded
+  			 // if the current code is loaded
   			 } else {
   			 	  		var i = runTime.waitList.indexOf(lastResult);
 						if (i<0)
@@ -166,12 +166,12 @@ function compare(resultFolder, fileName, textCode)
      			 if(remaining) {
       		 		writeData = Buffer.concat([remaining,writeData]);
       			 } 
-      		 //	Original.apply( process.stdout  ,[new Buffer("\n``````````")])
+      		  //	Original.apply( process.stdout  ,[new Buffer("\n``````````")])
 
       		    chunk = lastResult.read(writeData.length);
 
       		  //  Original.apply( process.stdout  ,[new Buffer(chunk)])
-      	 //    Original.apply( process.stdout  ,[new Buffer("`````````\n")])
+      	          //    Original.apply( process.stdout  ,[new Buffer("`````````\n")])
 
 
       		    if(chunk === null)
@@ -218,7 +218,7 @@ function compare(resultFolder, fileName, textCode)
 				lastResult.unshift(chunk);
 				runTime.vireoRunSync();
 			}
-		//	Original.apply( process.stdout  ,[new Buffer("\n VIA viaFinished ?????????????:"+runTime.viaFinished+"\n")]) 
+		      //Original.apply( process.stdout  ,[new Buffer("\n VIA viaFinished ?????????????:"+runTime.viaFinished+"\n")]) 
 
 			if (runTime.viaFinished){
 			//	process.stdout.write = Original;
