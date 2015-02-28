@@ -5,21 +5,31 @@ var resultFolder = "result";
 runTime.viaFinished = false;
 runTime.waitList = [];
 runTime.reloadVia = function(text){
+			Original.apply( process.stdout  ,[new Buffer("#############################Load via\n")]);
 	this.viaFinished =false;
 	this.core.v_delete( this.core.v_shell);
     this.core.v_shell = this.core.v_create(0);
     this.loadVia(text);
 }
-var Original = process.stdout.write;
+var stdout = process.stdout.write;
+var Original  = function(){};
 var newIO = null;
 	process.stdout.write = function(write) {
 		if (!newIO){
-			Original.apply( process.stdout  ,[new Buffer(write)]);
+			stdout.apply( process.stdout  ,[new Buffer(write)]);
 			return;
 		}
 		newIO(write);     	
 	}
+	process.stderr.write = function(write) {
+			stdout.apply( process.stdout  ,[new Buffer("error called")]);
 
+		if (!newIO){
+			Original.apply( process.stderr  ,[new Buffer(write)]);
+			return;
+		}
+		newIO(write);     	
+	}
 runTime.vireoRunSync = function () {
         // Run a chunk of code. if there is more pending
         // Then restart soon, else restart when it makes sense.
@@ -60,23 +70,7 @@ var newCreatedTest = 0;
 
 		 	
 	})
-	message.on('Finished', function(){console.log("message Finished")});
-	message.on('readable', function(){
-		var chunk;
-		var size = 1000;
-		chunk = message.read();
 
- 		console.log("read result:"+chunk)
-		 function continueR ()
-		 {
-			process.nextTick(function() {message.emit('Finished');
- 		  
-			})}  ;
-		  console.log("inside message1");
-
-		  continueR();
-		 	
-	})
 function compare2(resultFolder, fileName)
 {}
 function compare(resultFolder, fileName, textCode)
@@ -88,7 +82,6 @@ function compare(resultFolder, fileName, textCode)
  	var remaining = null;
 	var lastResult = fs.createReadStream(resultFolder+'/'+fileName);
 	var runFinished = 0;
-	process.nextTick(function() {lastResult.emit('readable');});
  		  
  	lastResult.on('end' , function(){
  		newIO = null;
@@ -107,19 +100,21 @@ function compare(resultFolder, fileName, textCode)
  		 	
  			
  		}
+ 		Original.apply( process.stdout  ,[new Buffer("\n FINAL different ?????????????:"+different+"\n")]) 
+
  		if (!runTime.viaFinished){ 
  			different= true;
  		}
 
  		if (!different) {
 			var message = 'testing passed :'+ fileName + '\n';
-			Original.apply( process.stdout  ,[new Buffer(message)]) 
+			stdout.apply( process.stdout  ,[new Buffer(message)]) 
+					passedTest ++;
 
 		} else {
 			var message = 'testing failed :'+ fileName + '\n';
-			Original.apply( process.stdout  ,[new Buffer(message)]) 
+			stdout.apply( process.stdout  ,[new Buffer(message)]) 
 		}
-		passedTest ++;
  	})
 	lastResult.on('readable', function() {
   		var chunk;   
@@ -127,6 +122,7 @@ function compare(resultFolder, fileName, textCode)
   			//		Original.apply( process.stdout  ,[new Buffer("\nqueue length:"+runTime.waitList.length+" ||||||||||||||||||\n")]) 
   				//	Original.apply( process.stdout  ,[new Buffer("\nruntime loaded :"+runTime.loadedVia+" ||||||||||||||||||\n")]) 
 
+		var needLoaded = false;
   		if(!runTime.loadedVia )
   		{
   			// code hasn't been loaded
@@ -137,8 +133,8 @@ function compare(resultFolder, fileName, textCode)
 
   			} 
   			runTime.loadedVia = fileName;
-
-  			runTime.reloadVia(textCode);
+  			needLoaded = true;
+  			
 
   		} else {
   			 if(runTime.loadedVia  === fileName )
@@ -154,28 +150,28 @@ function compare(resultFolder, fileName, textCode)
  			 	return;
   			 }
   		}
-  		runTime.viaFinished = false;
-
+ 
   	 	newIO = function (write){
 
   	 		if(!different)
      		{
      			var writeData = new Buffer(write);
-     		//	Original.apply( process.stdout  ,[new Buffer("\n~~~~~~~~~~")])
-     		//	Original.apply( process.stdout  ,[writeData])
-     		//	Original.apply( process.stdout  ,[new Buffer("~~~~~~~~~~\n")])
-
+     	/*
+     		   Original.apply( process.stdout  ,[new Buffer("\n~~~~~~~~~~")])
+     		 Original.apply( process.stdout  ,[writeData])
+     		 Original.apply( process.stdout  ,[new Buffer("~~~~~~~~~~\n")])
+		*/
      			writeData = new Buffer(writeData);
 
      			 if(remaining) {
       		 		writeData = Buffer.concat([remaining,writeData]);
       			 } 
-      		//	Original.apply( process.stdout  ,[new Buffer("\n`````````` ")])
+      		 //	Original.apply( process.stdout  ,[new Buffer("\n``````````")])
 
       		    chunk = lastResult.read(writeData.length);
 
-      		//    Original.apply( process.stdout  ,[new Buffer(chunk)])
-      		//    Original.apply( process.stdout  ,[new Buffer(" `````````\n")])
+      		  //  Original.apply( process.stdout  ,[new Buffer(chunk)])
+      	 //    Original.apply( process.stdout  ,[new Buffer("`````````\n")])
 
 
       		    if(chunk === null)
@@ -205,35 +201,49 @@ function compare(resultFolder, fileName, textCode)
       		 
       		}
   	 	}
-  	
+  		if (needLoaded)
+  		{ 
+  			different = false;
+  			runTime.reloadVia(textCode);
+  		}
  	
  		var chunk ;
-		while (!runTime.viaFinished &&(chunk =lastResult.read(1)) !=null)
-		{	
-			  // Original.apply( process.stdout  ,[new Buffer("\ncan running this time ?????????????\n")]) 
-
+ 		if((chunk =lastResult.read(1))!= null) {
+	 		// Original.apply( process.stdout  ,[new Buffer("\n VIA viaFinished ?????????????:"+runTime.viaFinished+"\n")]) 
 			lastResult.unshift(chunk);
-			runTime.vireoRunSync();
-		}
+			while (!runTime.viaFinished &&(chunk =lastResult.read(1)) !=null)
+			{	
+			//  Original.apply( process.stdout  ,[new Buffer("\ncan running this time ?????????????\n")]) 
 
-		if (runTime.viaFinished){
-		//	process.stdout.write = Original;
-
-			chunk = lastResult.read();
- 			if(chunk != null)
-			{
-				different = true;
-			} else 
-			if(remaining)
-			{
-				different = true;
-			} else {
-				different = false;
+				lastResult.unshift(chunk);
+				runTime.vireoRunSync();
 			}
-		}
-		else {
-			different = true;
-		}
+		//	Original.apply( process.stdout  ,[new Buffer("\n VIA viaFinished ?????????????:"+runTime.viaFinished+"\n")]) 
+
+			if (runTime.viaFinished){
+			//	process.stdout.write = Original;
+			//	 Original.apply( process.stdout  ,[new Buffer("\ndifferent ?????????????:"+different+"\n")]) 
+
+				chunk = lastResult.read(1);
+	 			if(chunk != null)
+				{
+					different = true;
+				} else 
+				if(remaining)
+				{
+					different = true;
+				} else {
+					different = false;
+				}
+			//Original.apply( process.stdout  ,[new Buffer("\ndifferent ?????????????:"+different+"\n")]) 
+
+			}
+			else {
+				different = true;
+			}
+	 	}
+	//	Original.apply( process.stdout  ,[new Buffer("\n LAST different ?????????????:"+different+"\n")]) 
+
 
 
 	});
@@ -264,25 +274,27 @@ function runVIA(fileName)
     newCreatedTest ++;
     var writeFinished =  null;
     var testResult = fs.createWriteStream(resultFolder+'/'+resultFile);
-    Original.apply( process.stdout  ,[new Buffer('Generating test result :'+resultFile+'\n')]) 
-   process.stdout.write = function(write) {
+    stdout.apply( process.stdout  ,[new Buffer('Generating test result :'+resultFile+'\n')]) ;
+    newIO = function(write) {
    		reWrite();
    		function reWrite(){
    			var ok = testResult.write(write);
-     	   if(!ok){
-      		  	testResult.once('drain',reWrite);
-     	   } else {
-     	   	if(writeFinished) {
+   			if(writeFinished) {
      	   		testResult.end();
      	   		newIO = null;
      	   	}
+     	   if(!ok){
+      		  	testResult.once('drain',reWrite);
+     	   } else {
+     
      	   }
   	  };
-	}
+	};
+	runTime.reloadVia(text);
 
   	runTime.vireoRunSync(runTime);
   	writeFinished = true;
- 
+ 	newIO = null;
 	});
 }
  
